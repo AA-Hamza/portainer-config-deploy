@@ -57,6 +57,11 @@ async function deployConfig({
 
     if (existingConfig) {
       core.info(`Found existing config with name: ${configName}`)
+
+      if (existingConfig.Spec.Data === Buffer.from(configContent).toString('base64')) {
+        core.info(`Remote config matches local one, passing ...`)
+        return
+      }
       core.info('Taking backup of existing config...')
 
       const oldName = `${configName}_${new Date(existingConfig.CreatedAt).toISOString().replace(/:/g, '_')}`

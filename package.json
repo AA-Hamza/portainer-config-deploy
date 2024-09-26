@@ -1,6 +1,6 @@
 {
   "name": "portainer-config-deploy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Github Action to deploy a compose config to a Portainer instance",
   "author": "Ahmed Anwar <AA-Hamza>",
   "license": "MIT",
