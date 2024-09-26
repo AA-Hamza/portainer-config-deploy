@@ -1,45 +1,34 @@
-name: "Deploy a stack to Portainer updated"
-description: "Github Action to deploy a stack to a Portainer instance"
-author: "SCOD <scod-br>"
+name: 'Deploy a config file to Portainer'
+description: 'Github Action to deploy a config to a Portainer instance'
+author: 'Ahmed Anwar <AA-Hamza>'
 branding:
-  icon: "upload-cloud"
-  color: "orange"
+  icon: 'upload-cloud'
+  color: 'blue'
 
 inputs:
   portainer-host:
     required: true
-    description: "Portainer host, eg. https://myportainer.instance.com"
+    description: 'Portainer host, eg. https://myportainer.instance.com'
   username:
     required: true
-    description: "Username for the Portainer login. NOTE: Do not use admin account! Create a new CI specific login"
+    description: 'Username for the Portainer login. NOTE: Do not use admin account! Create a new CI specific login'
   password:
     required: true
-    description: "Password for the Portainer login"
-  swarm-id:
-    required: false
-    description: "ID of the swarm. Only required if you deploy to a swarm."
+    description: 'Password for the Portainer login'
   endpoint-id:
     required: false
-    description: "ID of the Portainer node to deploy to"
-  stack-name:
+    description: 'ID of the Portainer node to deploy to'
+  config-name:
     required: true
-    description: "Name for the Portainer stack"
-  stack-definition:
+    description: 'Name for the config'
+  config-definition:
     required: false
-    description: "The path to the docker-compose stack stack definition file, eg. stack-definition.yml"
-  template-variables:
+    description: 'The path to the config file'
+  reject-unauthorized:
     required: false
-    description: "If given, these variables will be replaced in docker-compose file by handlebars"
-  image:
-    required: false
-    description: "The URI of the container image to insert into the stack definition, eg. docker.pkg.github.com/username/repo/master"
-  prune-stack:
-    required: false
-    description: "If true, the stack will be pruned before deployment"
-  pull-image:
-    required: false
-    description: "If true, the image will be pulled before deployment"
+    description: 'Reject unauthorized SSL certificates'
+    default: true
 
 runs:
-  using: "node20"
-  main: "dist/index.js"
+  using: 'node20'
+  main: 'dist/index.js'

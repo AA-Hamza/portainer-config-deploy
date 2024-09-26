@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
 import axios from 'axios'
-import { DeployStack, deployStack } from './deployStack'
+import { DeployConfig, deployConfig } from './deployConfig'
 
-function getInputs(): DeployStack {
+function getInputs(): DeployConfig {
   const portainerHost: string = core.getInput('portainer-host', {
     required: true
   })
@@ -12,56 +12,36 @@ function getInputs(): DeployStack {
   const password: string = core.getInput('password', {
     required: true
   })
-  const swarmId: string = core.getInput('swarm-id', {
-    required: false
-  })
   const endpointId: string = core.getInput('endpoint-id', {
     required: false
   })
-  const stackName: string = core.getInput('stack-name', {
+  const configName: string = core.getInput('config-name', {
     required: true
   })
-  const stackDefinitionFile: string = core.getInput('stack-definition', {
+  const configPath: string = core.getInput('config-definition', {
     required: false
   })
-  const templateVariables: string = core.getInput('template-variables', {
-    required: false
-  })
-  const image: string = core.getInput('image', {
-    required: false
-  })
-  const pruneStack: boolean = core.getBooleanInput('prune-stack', {
-    required: false
-  })
-  const pullImage: boolean = core.getBooleanInput('pull-image', {
-    required: false
-  })
-  const rejectUnauthorized: boolean = core.getBooleanInput('reject-unauthorized', {
-    required: false
-  }) == true
+  const rejectUnauthorized: boolean =
+    core.getBooleanInput('reject-unauthorized', {
+      required: false
+    }) == true
 
   return {
     portainerHost,
     username,
     password,
-    swarmId,
     endpointId: parseInt(endpointId) || 1,
-    stackName,
-    stackDefinitionFile: stackDefinitionFile ?? undefined,
-    templateVariables: templateVariables ? JSON.parse(templateVariables) : undefined,
-    image,
-    pruneStack,
-    pullImage,
+    configName,
+    configPath,
     rejectUnauthorized
   }
 }
 
-// DeployStack
 export async function run(): Promise<void> {
   try {
     const userInputs = getInputs()
-    await deployStack(userInputs)
-    core.info('✅ Deployment done')
+    await deployConfig(userInputs)
+    core.info('✅ Config Deployment done')
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
       const {

@@ -1,34 +1,39 @@
 import axios from 'axios'
-import https from 'https'
+import * as https from 'node:https'
 
-type EnvVariables = Array<{
-  name: string
-  value: string
-}>
-
-type EndpointId = number
-
-type StackData = {
-  Id: number
-  Name: string
-  EndpointId: EndpointId
-  Env: EnvVariables
-}
-
-type CreateStackParams = { type: number; method: string; endpointId: EndpointId }
-type CreateStackBody = { name: string; stackFileContent: string; swarmID?: string }
-type UpdateStackParams = { endpointId: EndpointId }
-type UpdateStackBody = {
-  env: EnvVariables
-  stackFileContent?: string
-  prune: boolean
-  pullImage: boolean
+type ConfigData = {
+  CreatedAt: string
+  ID: string
+  Portainer: {
+    ResourceControl: {
+      Id: number
+      ResourceId: string
+      SubResourceIds: []
+      Type: number
+      UserAccesses: []
+      TeamAccesses: []
+      Public: boolean
+      AdministratorsOnly: boolean
+      System: boolean
+    }
+  }
+  Spec: {
+    Data: string
+    // "Labels": {},
+    Name: string
+  }
+  UpdatedAt: string
+  Version: {
+    Index: number
+  }
 }
 
 export class PortainerApi {
   private axiosInstance
+  private endpointId = 1
 
-  constructor(host: string, rejectUnauthorized = true) {
+  constructor(host: string, endpointId = 1, rejectUnauthorized = true) {
+    this.endpointId = endpointId
     this.axiosInstance = axios.create({
       baseURL: `${host}/api`,
       httpsAgent:
@@ -48,21 +53,35 @@ export class PortainerApi {
     this.axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${data.jwt}`
   }
 
-  async logout(): Promise<void> {
-    await this.axiosInstance.post('/auth/logout')
-    this.axiosInstance.defaults.headers.common['Authorization'] = ''
-  }
-
-  async getStacks(): Promise<StackData[]> {
-    const { data } = await this.axiosInstance.get<StackData[]>('/stacks')
+  async getAllConfigs(): Promise<ConfigData[]> {
+    const { data } = await this.axiosInstance.get<ConfigData[]>(
+      `/endpoints/${this.endpointId}/docker/configs`
+    )
     return data
   }
 
-  async createStack(params: CreateStackParams, body: CreateStackBody): Promise<void> {
-    await this.axiosInstance.post('/stacks', body, { params })
+  async createConfig(name: string, data: string, isBase64Encoded = false): Promise<void> {
+    const base64Data = isBase64Encoded ? data : Buffer.from(data).toString('base64')
+    console.log('NAME: ', name)
+    await this.axiosInstance.post(`/endpoints/${this.endpointId}/docker/configs/create`, {
+      Name: name,
+      Data: base64Data
+    })
   }
 
-  async updateStack(id: number, params: UpdateStackParams, body: UpdateStackBody): Promise<void> {
-    await this.axiosInstance.put(`/stacks/${id}`, body, { params })
+  async deleteConfig(id: string): Promise<void> {
+    await this.axiosInstance.delete(`/endpoints/${this.endpointId}/docker/configs/${id}`)
+  }
+
+  async getConfig(id: string): Promise<ConfigData> {
+    const { data } = await this.axiosInstance.get<ConfigData>(
+      `/endpoints/${this.endpointId}/docker/configs/${id}`
+    )
+    return data
+  }
+
+  async cloneConfig(id: string, newName: string): Promise<void> {
+    const config = await this.getConfig(id)
+    await this.createConfig(newName, config.Spec.Data, true)
   }
 }

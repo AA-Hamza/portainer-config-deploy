@@ -1,8 +1,8 @@
 {
-  "name": "portainer-stack-deploy",
-  "version": "1.5.0",
-  "description": "Github Action to deploy a stack to a Portainer instance",
-  "author": "Viet Tien <nvti>",
+  "name": "portainer-config-deploy",
+  "version": "1.0.0",
+  "description": "Github Action to deploy a compose config to a Portainer instance",
+  "author": "Ahmed Anwar <AA-Hamza>",
   "license": "MIT",
   "main": "lib/main.js",
   "keywords": [

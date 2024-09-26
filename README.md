@@ -2,9 +2,9 @@
   <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
 </p>
 
-# Portainer Stack Deploy
+# Portainer Config Deploy
 
-Portainer-stack-deploy is a GitHub Action for deploying a newly updated stack to a Portainer v2 instance. This action is useful when you have a continuous deployment pipeline. The action itself is inspired by how you deploy a task definition to Amazon ECS.
+Portainer-config -deploy is a GitHub Action for deploying a newly updated config to portainer, if the config already exists it takes a backup then creates a new one
 
 **Currently works on Portainer API v2.**
 
@@ -12,24 +12,19 @@ Portainer-stack-deploy is a GitHub Action for deploying a newly updated stack to
 
 ## Action Inputs
 
-| Input               | Description                                                                                                                                                                  | Default      |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| portainer-host      | Portainer host, eg. `https://myportainer.instance.com`                                                                                                                       | **Required** |
-| username            | Username for the Portainer login. **NOTE: Do not use admin account!** Create a new CI specific login instead                                                                 | **Required** |
-| password            | Password for the Portainer login                                                                                                                                             | **Required** |
-| swarm-id            | ID of the swarm. Only required if you deploy to a swarm                                                                                                                      |              |
-| endpoint-id         | ID of the Portainer node to deploy to                                                                                                                                        | 1            |
-| stack-name          | Name for the Portainer stack                                                                                                                                                 | **Required** |
-| stack-definition    | The path to the docker-compose stack stack definition file from repo root, eg. `stack-definition.yml`                                                                        | **Required** |
-| template-variables  | If given, these variables will be replaced in docker-compose file by handlebars                                                                                              |              |
-| image               | The URI of the container image to insert into the stack definition, eg. `ghcr.io/username/repo:sha-676cae2`. Will use existing image inside stack definition if not provided |              |
-| prune-stack         | If set to `true`, the action will remove any services that are not defined in the stack definition.                                                                          | false        |
-| pull-image          | If set to `true`, the action will pull the image before deploying the stack.                                                                                                 | false        |
-| reject-unauthorized | If set to `false`, the action will skip self authorized certificates.                                                                                                         | true        |
+| Input               | Description                                                                                                  | Default      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ |
+| portainer-host      | Portainer host, eg. `https://myportainer.instance.com`                                                       | **Required** |
+| username            | Username for the Portainer login. **NOTE: Do not use admin account!** Create a new CI specific login instead | **Required** |
+| password            | Password for the Portainer login                                                                             | **Required** |
+| endpoint-id         | ID of the Portainer node to deploy to                                                                        | 1            |
+| config-name         | Name for the Portainer config                                                                                | **Required** |
+| config-definition   | The path to the config file from repo root, eg. `config.json`, `app.settings.json`                           | **Required** |
+| reject-unauthorized | If set to `false`, the action will skip self authorized certificates.                                        | true         |
 
 ## Example
 
-The example below shows how the `portainer-stack-deploy` action can be used to deploy a fresh version of your app to Portainer using ghcr.io.
+The example below shows how the `portainer-config-deploy` action can be used to deploy a fresh version of your app to Portainer using ghcr.io.
 
 ```yaml
 name: Deploy
@@ -77,40 +72,15 @@ jobs:
         shell: bash
 
       - name: Deploy stack to Portainer
-        uses: carlrygart/portainer-stack-deploy@v1
+        uses: AA-Hamza/portainer-config-deploy@v1
         with:
           portainer-host: ${{ secrets.PORTAINER_HOST }}
           username: ${{ secrets.PORTAINER_USERNAME }}
           password: ${{ secrets.PORTAINER_PASSWORD }}
-          stack-name: 'my-awesome-web-app'
-          stack-definition: 'stack-definition.yml'
-          template-variables: '{"username": "MrCool"}'
-          image: ${{ env.DOCKER_IMAGE_URI }}:${{ env.IMAGE_TAG }}
-          prune-stack: true
-          pull-image: true
-```
-
-The `stack-definition.yml` file would be placed in the root of the repository and might look something like this:
-
-```yaml
-version: '3.7'
-
-services:
-  server:
-    image: ghcr.io/{{username}}/my-awesome-web-app:latest
-    deploy:
-      update_config:
-        order: start-first
-```
-
-## Development
-
-Feel free contributing.
-
-### Running unit tests
-
-```sh
-npm test
+          endpoint-id: 1
+          config-name: 'app-config'
+          config-definition: 'app.settings.json'
+          reject-unauthorized: false
 ```
 
 ### Build, check linting, run tests
