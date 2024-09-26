@@ -36,15 +36,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PortainerApi = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 const https = __importStar(__nccwpck_require__(2286));
-// type CreateStackParams = { type: number; method: string; endpointId: EndpointId }
-// type CreateStackBody = { name: string; stackFileContent: string; swarmID?: string }
-// type UpdateStackParams = { endpointId: EndpointId }
-// type UpdateStackBody = {
-//   env: EnvVariables
-//   stackFileContent?: string
-//   prune: boolean
-//   pullImage: boolean
-// }
 class PortainerApi {
     constructor(host, endpointId = 1, rejectUnauthorized = true) {
         this.endpointId = 1;
@@ -159,6 +150,10 @@ async function deployConfig({ portainerHost, username, password, endpointId, con
         });
         if (existingConfig) {
             core.info(`Found existing config with name: ${configName}`);
+            if (existingConfig.Spec.Data === Buffer.from(configContent).toString('base64')) {
+                core.info(`Remote config matches local one, passing ...`);
+                return;
+            }
             core.info('Taking backup of existing config...');
             const oldName = `${configName}_${new Date(existingConfig.CreatedAt).toISOString().replace(/:/g, '_')}`;
             await portainerApi.createConfig(oldName, existingConfig.Spec.Data, true);
@@ -259,7 +254,6 @@ function getInputs() {
         rejectUnauthorized
     };
 }
-// DeployStack
 async function run() {
     try {
         const userInputs = getInputs();
