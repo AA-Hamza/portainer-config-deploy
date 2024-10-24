@@ -62,7 +62,7 @@ async function deployConfig({
     }
     core.info('Taking backup of existing config...')
 
-    const oldName = `${configName}_${new Date(existingConfig.CreatedAt).toISOString().replace(/:/g, '_')}`
+    const oldName = `${configName}_${new Date().toISOString().replace(/:/g, '_')}`
     await portainerApi.createConfig(oldName, existingConfig.Spec.Data, true)
 
     core.info('Deleting existing config...')
