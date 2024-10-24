@@ -43,6 +43,7 @@ export async function run(): Promise<void> {
     await deployConfig(userInputs)
     core.info('✅ Config Deployment done')
   } catch (error) {
+    core.info('⛔️ Something went rong during deployment!')
     if (axios.isAxiosError(error) && error.response) {
       const {
         status,
@@ -52,6 +53,8 @@ export async function run(): Promise<void> {
       return core.setFailed(
         `AxiosError HTTP Status ${status} (${method} ${url}): ${JSON.stringify(data, null, 2)}`
       )
+    } else {
+      core.info(`error: ${JSON.stringify(error, null, 2)}`)
     }
     return core.setFailed(error as Error)
   }

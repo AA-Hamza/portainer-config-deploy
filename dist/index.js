@@ -122,7 +122,6 @@ const api_1 = __nccwpck_require__(8947);
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const core = __importStar(__nccwpck_require__(2186));
-const axios_1 = __nccwpck_require__(8757);
 function getConfigContent(relativePath) {
     const configFullPath = path_1.default.join(process.env.GITHUB_WORKSPACE || '.', relativePath);
     core.info(`Reading config file from ${configFullPath}`);
@@ -143,42 +142,29 @@ async function deployConfig({ portainerHost, username, password, endpointId, con
         username,
         password
     });
-    try {
-        const allConfigs = await portainerApi.getAllConfigs();
-        const existingConfig = allConfigs.find(s => {
-            return s.Spec.Name === configName;
-        });
-        if (existingConfig) {
-            core.info(`Found existing config with name: ${configName}`);
-            if (existingConfig.Spec.Data === Buffer.from(configContent).toString('base64')) {
-                core.info(`Remote config matches local one, passing ...`);
-                return;
-            }
-            core.info('Taking backup of existing config...');
-            const oldName = `${configName}_${new Date(existingConfig.CreatedAt).toISOString().replace(/:/g, '_')}`;
-            await portainerApi.createConfig(oldName, existingConfig.Spec.Data, true);
-            core.info('Deleting existing config...');
-            await portainerApi.deleteConfig(existingConfig.ID);
-            core.info('Creating new config...');
-            await portainerApi.createConfig(configName, configContent, false);
-            core.info(`Successfully created new config with name: ${configName}`);
+    const allConfigs = await portainerApi.getAllConfigs();
+    const existingConfig = allConfigs.find(s => {
+        return s.Spec.Name === configName;
+    });
+    if (existingConfig) {
+        core.info(`Found existing config with name: ${configName}`);
+        if (existingConfig.Spec.Data === Buffer.from(configContent).toString('base64')) {
+            core.info(`Remote config matches local one, passing ...`);
+            return;
         }
-        else {
-            core.info('Deploying new config...');
-            await portainerApi.createConfig(configName, configContent, false);
-            core.info(`Successfully created new config with name: ${configName}`);
-        }
+        core.info('Taking backup of existing config...');
+        const oldName = `${configName}_${new Date(existingConfig.CreatedAt).toISOString().replace(/:/g, '_')}`;
+        await portainerApi.createConfig(oldName, existingConfig.Spec.Data, true);
+        core.info('Deleting existing config...');
+        await portainerApi.deleteConfig(existingConfig.ID);
+        core.info('Creating new config...');
+        await portainerApi.createConfig(configName, configContent, false);
+        core.info(`Successfully created new config with name: ${configName}`);
     }
-    catch (error) {
-        core.info('⛔️ Something went wrong during deployment!');
-        if ((0, axios_1.isAxiosError)(error) && error.response) {
-            const { status, data, config: { url, method } } = error.response;
-            return core.info(`AxiosError HTTP Status ${status} (${method} ${url}): ${JSON.stringify(data, null, 2)}`);
-        }
-        else {
-            core.info(`error: ${JSON.stringify(error, null, 2)}`);
-        }
-        throw error;
+    else {
+        core.info('Deploying new config...');
+        await portainerApi.createConfig(configName, configContent, false);
+        core.info(`Successfully created new config with name: ${configName}`);
     }
 }
 exports.deployConfig = deployConfig;
@@ -261,9 +247,13 @@ async function run() {
         core.info('✅ Config Deployment done');
     }
     catch (error) {
+        core.info('⛔️ Something went rong during deployment!');
         if (axios_1.default.isAxiosError(error) && error.response) {
             const { status, data, config: { url, method } } = error.response;
             return core.setFailed(`AxiosError HTTP Status ${status} (${method} ${url}): ${JSON.stringify(data, null, 2)}`);
+        }
+        else {
+            core.info(`error: ${JSON.stringify(error, null, 2)}`);
         }
         return core.setFailed(error);
     }
